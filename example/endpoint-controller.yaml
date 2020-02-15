@@ -1,0 +1,66 @@
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: endpoint-controller
+rules:
+- apiGroups: [""]
+  verbs:
+    - create
+    - get
+    - list
+    - update
+    - patch
+    - watch
+  resources:
+    - endpoints
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: endpoint-controller
+subjects:
+- kind: ServiceAccount
+  name: endpoint-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: endpoint-controller
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: endpoint-controller
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: endpoint-controller
+  name: endpoint-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: endpoint-controller
+  template:
+    metadata:
+      labels:
+        app: endpoint-controller
+    spec:
+      serviceAccountName: endpoint-controller
+      containers:
+        - image: logan2211/kube-endpoint-controller:latest
+          name: controller
+          env:
+            - name: ENDPOINT_SELECTOR
+              value: 'svc=svc-backend'
+            - name: MANAGED_ENDPOINT
+              value: "frontend-lb"

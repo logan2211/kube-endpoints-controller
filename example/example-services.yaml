@@ -1,0 +1,59 @@
+---
+
+# A headless service containing endpoints for all httpd pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+  labels:
+    svc: svc-backend
+spec:
+  clusterIP: None
+  ports:
+    - port: 80
+      protocol: TCP
+      name: http
+    - port: 443
+      protocol: TCP
+      name: https
+  selector:
+    app: http
+
+---
+
+# A headless service containing endpoints for all ftpd pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: ftpd
+  labels:
+    svc: svc-backend
+spec:
+  clusterIP: None
+  ports:
+    - port: 21
+      protocol: TCP
+      name: ftp
+  selector:
+    app: ftpd
+
+---
+
+# Frontend loadbalancer which will contain combined ftpd/httpd endpoints
+# on the same service/IP but targeting different sets of pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-lb
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      protocol: TCP
+      name: http
+    - port: 443
+      protocol: TCP
+      name: https
+    - port: 21
+      protocol: TCP
+      name: ftp
